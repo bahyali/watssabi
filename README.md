@@ -144,6 +144,17 @@ This script automatically handles:
 2.  Running all tests using `pytest`.
 3.  Shutting down and cleaning up the test containers after the tests complete.
 
+## Production Deployment
+
+Whether you deploy on bare metal, Kubernetes, or the provided AWS Terraform stack, the production flow follows the same core steps:
+
+1. **Build the image:** `docker build -t watssabi-ai-collector:latest .`
+2. **Provide environment variables:** copy `.env` to your secret manager or pass the values directly as container env vars (OpenAI, Twilio, Postgres, Redis, project name, etc.). Never bake secrets into the image.
+3. **Apply database migrations:** run `alembic upgrade head` using the same image and configuration that will power the API (e.g., `docker run --rm --env-file prod.env watssabi-ai-collector alembic upgrade head`).
+4. **Run the app container:** start Uvicorn via the packaged `tools/run.sh` or your own process manager, exposing port 8000 behind your reverse proxy / load balancer.
+5. **Monitor & log:** structured JSON logs are already emitted via `structlog`, so point stdout to your logging stack (CloudWatch, ELK, etc.).
+6. **Scale in AWS:** the `infra/terraform` directory provisions ECS Fargate, RDS, and ElastiCache; set the required variables, run `terraform apply`, then push the built image to the generated ECR repository.
+
 ## Available Scripts
 
 The `tools/` directory contains scripts for common development tasks:
