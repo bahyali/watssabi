@@ -1,0 +1,9 @@
+version: "2"
+
+tunnels:
+  app:
+    addr: app:8000
+    proto: http
+    schemes:
+      - https
+    inspect: false

@@ -1,0 +1,31 @@
+@startuml
+title User Message Processing Sequence
+
+actor User
+participant Twilio
+participant "API Server" as API
+participant "Session Store (Redis)" as Cache
+participant "AI Agent (OpenAI)" as LLM
+participant "Primary DB (Postgres)" as DB
+
+User -> Twilio : Sends WhatsApp message
+Twilio -> API : POST /webhook/twilio
+API -> API : Validate Twilio Signature
+API -> Cache : GET conversation_state(user_id)
+Cache --> API : Returns current state
+
+API -> LLM : Send(prompt, history, user_message)
+LLM --> API : Return(reply_message, extracted_data, next_state)
+
+API -> Cache : SET conversation_state(user_id, next_state)
+Cache --> API : OK
+
+alt Data collection complete and confirmed
+    API -> DB : INSERT into CollectedData (final_json)
+    DB --> API : OK
+end
+
+API -> Twilio : POST /Messages (reply_message)
+Twilio --> User : Delivers WhatsApp reply
+
+@enduml

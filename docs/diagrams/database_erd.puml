@@ -1,0 +1,33 @@
+@startuml
+title Entity Relationship Diagram
+
+entity User {
+  * user_id : UUID <<PK>>
+  --
+  whatsapp_id : varchar <<unique>>
+  created_at : timestamp
+}
+
+entity Conversation {
+  * conversation_id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>>
+  status : varchar 'e.g., ongoing, completed'
+  conversation_history : jsonb
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity CollectedData {
+  * data_id : UUID <<PK>>
+  --
+  conversation_id : UUID <<FK>> <<unique>>
+  user_id : UUID <<FK>>
+  data : jsonb
+  created_at : timestamp
+}
+
+User ||--o{ Conversation : has
+Conversation }o--|| CollectedData : results in
+
+@enduml

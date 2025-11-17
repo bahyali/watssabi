@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram for API Server
+
+System_Ext(twilio, "Twilio API")
+System_Ext(ai_agent, "AI Agent (OpenAI)")
+ContainerDb(db, "Primary Database", "PostgreSQL")
+ContainerDb(cache, "Session Store", "Redis")
+
+Container(api, "API Server", "Python, FastAPI") {
+    Component(webhook_controller, "Twilio Webhook Controller", "FastAPI Router", "Receives, validates, and routes incoming Twilio requests.")
+    Component(convo_service, "Conversation Service", "Python Module", "Orchestrates the conversation flow. Manages state with the Session Store.")
+    Component(ai_client, "AI Agent Client", "Python Module", "Formats prompts for the LLM and parses its responses.")
+    Component(twilio_client, "Twilio Client", "Python Module", "Sends messages back to the user via the Twilio API.")
+    Component(data_repo, "Data Repository", "SQLAlchemy Module", "Handles all data persistence to the Primary Database.")
+}
+
+Rel(webhook_controller, convo_service, "Uses", "Processes message")
+Rel(convo_service, ai_client, "Uses", "To get next step/reply")
+Rel(convo_service, twilio_client, "Uses", "To send reply to user")
+Rel(convo_service, data_repo, "Uses", "To save final data")
+Rel(convo_service, cache, "Reads/Writes", "Session State")
+
+Rel_Back(ai_client, ai_agent, "Makes API calls to")
+Rel_Back(twilio_client, twilio, "Makes API calls to")
+Rel_Back(data_repo, db, "Reads/Writes to")
+
+@enduml

@@ -1,0 +1,69 @@
+openapi: 3.0.3
+info:
+  title: Watssabi AI Collector API
+  version: 1.0.0
+  description: API for collecting information from users via WhatsApp using an AI agent.
+
+paths:
+  /webhook/twilio:
+    post:
+      summary: Handle Incoming Twilio Messages
+      description: >
+        This endpoint receives webhook notifications from Twilio for incoming
+        WhatsApp messages. It requires a valid X-Twilio-Signature header for
+        authentication.
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                MessageSid:
+                  type: string
+                  description: The unique identifier for the message.
+                AccountSid:
+                  type: string
+                  description: Your Twilio Account SID.
+                MessagingServiceSid:
+                  type: string
+                  description: The SID of the Twilio Messaging Service. Present if the message was sent via a Messaging Service.
+                From:
+                  type: string
+                  description: The sender's WhatsApp ID (e.g., `whatsapp:+14155238886`).
+                To:
+                  type: string
+                  description: Your Twilio WhatsApp number.
+                Body:
+                  type: string
+                  description: The text content of the incoming message.
+                NumMedia:
+                  type: integer
+                  description: The number of media items included in the message.
+              required:
+                - MessageSid
+                - AccountSid
+                - From
+                - To
+                - Body
+                - NumMedia
+      responses:
+        '200':
+          description: >
+            Success. A TwiML response was generated to reply to the user.
+          content:
+            application/xml:
+              schema:
+                type: string
+                format: xml
+                example: '<Response><Message>Hello from the API!</Message></Response>'
+        '204':
+          description: >
+            Success. The message was received and acknowledged, but no TwiML
+            reply is being sent.
+        '403':
+          description: >
+            Forbidden. The request signature is invalid, indicating the request
+            did not originate from Twilio.
